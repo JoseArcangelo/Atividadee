@@ -70,6 +70,7 @@ export default function App() {
       Alert.alert("Erro", e?.message);
     } finally {
       setLoading(false);
+      setStatusMsg("");
     }
   }
 
@@ -89,11 +90,16 @@ export default function App() {
       Alert.alert("Erro", e?.message);
     } finally {
       setLoading(false);
+      setStatusMsg("");
     }
   }
 
   async function playAudioBase64(base64Str: string) {
     try {
+      if (soundObj) {
+        await soundObj.stopAsync();
+        await soundObj.unloadAsync();
+      }
       const uri = `data:audio/mp3;base64,${base64Str}`;
       const { sound } = await Audio.Sound.createAsync({ uri });
       setSoundObj(sound);
@@ -137,6 +143,7 @@ export default function App() {
 
     try {
       setLoading(true);
+      setStatusMsg("Enviando áudio para transcrição...");
       const resp = await axios.post(`${API_BASE}/chat-audio`, form, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -145,6 +152,7 @@ export default function App() {
       Alert.alert("Erro", err?.message);
     } finally {
       setLoading(false);
+      setStatusMsg("");
     }
   }
 
@@ -152,13 +160,16 @@ export default function App() {
     if (!prompt.trim()) return Alert.alert("Validação", "Digite um texto primeiro.");
     try {
       setLoading(true);
+      setStatusMsg("Convertendo texto em áudio...");
       const resp = await axios.post(`${API_BASE}/chat-tts`, { text: prompt });
       const base64 = resp.data.audioBase64;
       if (base64) await playAudioBase64(base64);
+      setReply(resp.data.text || "");
     } catch (err: any) {
       Alert.alert("Erro", err?.message);
     } finally {
       setLoading(false);
+      setStatusMsg("");
     }
   }
 
